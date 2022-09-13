@@ -137,6 +137,4 @@ player1=AIPlayer("X")
 player2=RandomPlayer("o")
 game=Game(player1,player2)
 game.run()
-        
-#this is experiment
-#this is experiment2
+
