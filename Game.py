@@ -17,6 +17,14 @@ class Game(object):
             else:
                 return self.player1
     
+        
+
+    def game_over(self):
+        player1_list=list(self.get_legal_actions("X"))
+        player2_list=list(self.get_legal_actions("O"))
+        is_over=len(player1_list)==0 and len(player2_list)==0
+        return is_over
+
     
     
     
