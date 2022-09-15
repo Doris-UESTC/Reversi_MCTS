@@ -1,3 +1,6 @@
+from turtle import pos
+
+
 class Board(object):
     def __init__(self):
         self.empty='.'
@@ -58,7 +61,49 @@ class Board(object):
                         break
                 if not self.is_on_board(x,y):
                     continue
-
+                if self.board[x][y]==color:
+                    while True:
+                        x-=x_direction
+                        y-=y_direction
+                        if x==x_start and y==y_start:
+                            break
+                        flipped_pos.append([x,y])
+        self.board[x_start][y_start]=self.empty
+        if len(flipped_pos)==0:
+            return False
+        for position in flipped_pos:
+            flipped_pos_board.append(self.num_board(position))
+        return flipped_pos_board
     def get_legal_actions(self,color):
-        
-    def backpropagation():
+        op_color="O" if color=="X" else "X
+        op_color_near_points=[]
+        board=self.board
+        for i in range(8):
+            for j in range(8):
+                if board[i][j]==op_color:
+                    for dx,dy in self.dirs:
+                        x,y=i+dx,j+dy
+                        if 0<=x<=7 and 0<=y<=7 and board[x][y]==self.empty and (x,y) not in op_color_near_points:
+                            op_color_near_points.append((x,y))
+        l=[0,1,2,3,4,5,6,7]
+        for p in op_color_near_points:
+            if self.can_fliped(p,color):
+                if p[0] in l and p[1] in l:
+                    p=self.num_board(p)
+                yield p
+    
+    def board_num(self,action):
+        row,col=str(action[1]).upper(),str(action[0]).upper()
+        if row in '12345678' and 'ABCDEFGH':
+            x,y='12345678'.index(row),'ABCDEFGH'.index(col)
+            return x,y
+    def num_board(self,action):
+        row,col=action
+        l=[0,1,2,3,4,5,6,7]
+        if col in l and row in l:
+            return chr(ord('A')+col)+str(row+1)
+    def backpropagation(self,action,flipped_pos,color):
+        self.board[action[0]][action[1]]=self.empty
+        op_color="O" if color=="X" else "X"
+        for position in flipped_pos:
+            self.board[position[0]][position[1]]=op_color

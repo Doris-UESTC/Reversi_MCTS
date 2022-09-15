@@ -2,9 +2,28 @@ import copy
 import math
 import random
 from secrets import choice
+from turtle import color
 
 from Board import Board
-
+class RandomPlayer:
+    def __init__(self):
+        self.color=color
+    
+    def random_choice(self,board):
+        action_list=list(board.get_legal_actions(self.color))
+        if len(action_list)==0:
+            return None
+        else:
+            return random.choice(action_list)
+        
+    def get_move(self,board):
+        if self.color=='X':
+            player_name="player1"
+        else:
+            player_name="player2"
+        action=self.random_choice(board)
+        return action
+        
 class Node:
     def __init__(self,state,color,parent=None,action=None):
         self.visit=0
