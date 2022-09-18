@@ -14,7 +14,12 @@ class Board(object):
         return self.board[index]
     
     def display(self):
-        print()
+        print(' 0 1 2 3 4 5 6 7')
+        board=self.board
+        for i in range(8):
+            print(str(i)+' '.join(board[i]))
+
+        print('\n')
 
     def count(self,color):
         count=0
@@ -23,6 +28,18 @@ class Board(object):
                 if self.board[x][y]==color:
                     count+=1
         return count
+
+    def move(self,action,color):
+        fliped=self.can_fliped(action,color)
+        if fliped:
+            for flip in fliped:
+                self.board[flip[0]][flip[1]]=color
+            
+            x,y=action
+            self.board[x][y]=color
+            return fliped
+        else:
+            return False
 
     def get_winner(self):
         player1_count=self.count('X')
@@ -72,10 +89,11 @@ class Board(object):
         if len(flipped_pos)==0:
             return False
         for position in flipped_pos:
-            flipped_pos_board.append(self.num_board(position))
+            flipped_pos_board.append(position)
         return flipped_pos_board
     def get_legal_actions(self,color):
-        op_color="O" if color=="X" else "X
+        ans=[]
+        op_color="O" if color=="X" else "X"
         op_color_near_points=[]
         board=self.board
         for i in range(8):
@@ -89,19 +107,9 @@ class Board(object):
         for p in op_color_near_points:
             if self.can_fliped(p,color):
                 if p[0] in l and p[1] in l:
-                    p=self.num_board(p)
-                yield p
-    
-    def board_num(self,action):
-        row,col=str(action[1]).upper(),str(action[0]).upper()
-        if row in '12345678' and 'ABCDEFGH':
-            x,y='12345678'.index(row),'ABCDEFGH'.index(col)
-            return x,y
-    def num_board(self,action):
-        row,col=action
-        l=[0,1,2,3,4,5,6,7]
-        if col in l and row in l:
-            return chr(ord('A')+col)+str(row+1)
+                    ans.append([p[0],p[1]])
+        return ans
+                
     def backpropagation(self,action,flipped_pos,color):
         self.board[action[0]][action[1]]=self.empty
         op_color="O" if color=="X" else "X"
