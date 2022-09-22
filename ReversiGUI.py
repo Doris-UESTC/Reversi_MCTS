@@ -285,7 +285,7 @@ class ReversiGUI(Frame):
 
     def humanAIButtonClicked(self):
         """人机战按钮点击事件"""
-        if self.selectedPieceValue.get() == 1:
+        if self.selectedPieceValue.get() == 2:
             self.selectBlackRadioBtn.config(state="disable")
         else:
             self.selectWhiteRadioBtn.config(state="disable")
