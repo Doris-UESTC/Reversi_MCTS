@@ -1,4 +1,5 @@
 from doctest import master
+from operator import contains
 import time
 from http.client import OK
 import tkinter
@@ -189,41 +190,53 @@ class ReversiGUI(Frame):
                                              image=self.whiteImage)
                     boardCanvas.pack()
     def AIGo(self,color):
-        time.sleep(10)
+        time.sleep(0.25)
         if color=="X":
             action=self.player1.get_move(self.board)
             self.board.move(action,"X")
         else:
             action=self.player2.get_move(self.board)
             self.board.move(action,"O")
-        self.blackCountLabel['text']=str(self.board.count("X"))
-        self.whiteCountLabel['text']=str(self.board.count("O"))
+        self.blackCountLabel['text']= "{:0>2}".format(str(self.board.count("X")))
+        self.whiteCountLabel['text']="{:0>2}".format(str(self.board.count("O")))
         self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
+    
+    def judgeLegal(self, ans, location):
+        """判断是否合法"""
+        if location in ans:
+            return True
+        messagebox.showerror("警告", "棋子位置不合法，请重新选择落子位置！")
+        return False
+
     def moveNext(self, event):
         """下棋"""
-        startTime = datetime.datetime.now()
         col = int((event.x - 40) / 80)
         row = int((event.y - 40) / 80)
         if row > 7 or col > 7:
+            return
+        ans = self.board.get_legal_actions("O" if self.selectedPieceValue.get() == 2 else "X")
+        if self.judgeLegal(ans, [row, col]) == False:
             return
         if self.board.board[row][col] == ".":
             self.blackCount += 1
             self.blackCountLabel["text"] = "{:0>2}".format(self.blackCount)
             if self.selectedPieceValue.get()==1:
                 self.board.move([row,col],"X")
-                self.blackCountLabel['text']=str(self.board.count("X"))
-                self.whiteCountLabel['text']=str(self.board.count("O"))
+                self.blackCountLabel['text']="{:0>2}".format(str(self.board.count("X")))
+                self.whiteCountLabel['text']="{:0>2}".format(str(self.board.count("O")))
                 self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
+                startTime = datetime.datetime.now()
                 self.AIGo("O")
             else:
                 self.board.move([row,col],"O")
                 self.blackCountLabel['text']=str(self.board.count("X"))
                 self.whiteCountLabel['text']=str(self.board.count("O"))
                 self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
+                startTime = datetime.datetime.now()
                 self.AIGo("X")
             self.stepCount = self.stepCount + 1
             overTime = datetime.datetime.now()
-            timeConsuming = (overTime-startTime).microseconds
+            timeConsuming = (overTime-startTime).microseconds - 250
             self.printStepDealayMessage(timeConsuming=timeConsuming)
             self.sumStepDealy = self.sumStepDealy + timeConsuming
             if self.blackCount == 62:
