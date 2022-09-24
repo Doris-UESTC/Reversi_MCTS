@@ -1,5 +1,5 @@
-from asyncio.windows_events import NULL
 from doctest import master
+import time
 from http.client import OK
 import tkinter
 from tkinter import *
@@ -13,7 +13,9 @@ from PIL import Image, ImageTk
 from math import *
 from enum import Enum
 import datetime
-
+from Board import Board
+from Game import Game
+from MCTS import AIPlayer,HumanPlayer,RoxannePlayer
 
 class ReversiGUI(Frame):
     """黑白棋GUI"""
@@ -21,26 +23,24 @@ class ReversiGUI(Frame):
     def __init__(self, master=None, layoutImages=None):
         super().__init__(master)
         self.master = master
+        self.player1 = AIPlayer("X")
+        self.player2 = AIPlayer("O")
+        self.game=Game(self.player1,self.player2)
         self.setImages(layoutImages)
-        self.initialParameters()
-        self.initialLayout()
-        self.pack()
-
-    def initialParameters(self):
         self.blackCount = 2
         self.whiteCount = 2
         self.stepCount = 0
         self.sumStepDealy = 0
         self.selectedPieceValue = tkinter.IntVar()  # 调用get()，值为 1 是黑棋，2 是白棋
         self.superParameter = float("{:0.12f}".format(sqrt(2)/2))
-        self.board = [["." for _ in range(8)]for _ in range(8)]
-        self.boardCanvas = NULL
+        self.board = Board()
+        self.boardCanvas = ""
         self.playMode = PlayMode.HUMANVSAI
+        self.initialLayout()
+        self.pack()
 
     def initialLayout(self):
         """初始化GUI布局"""
-        self.initialBoard(self.board)
-
         # 棋盘区
         boardFrame = tkinter.Frame(master, bg="#13693B",
                                    width=720, height=720, relief='flat')
@@ -145,7 +145,7 @@ class ReversiGUI(Frame):
         self.stepDelayMessage.insert("end", "各步延时为：\n")
         self.stepDelayMessage.config(state="disable")
 
-        self.drawAll(board=self.board, boardCanvas=self.boardCanvas)
+        self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
 
         self.boardCanvas.bind("<Button-1>", self.moveNext)
         self.selectBlackRadioBtn.config(command=self.selectedPieceChanged)
@@ -156,6 +156,12 @@ class ReversiGUI(Frame):
         changeSuperParamBtn.config(command=self.changeSuperParamBtnClicked)
         restoreSuperParamBtn.config(command=self.restoreSuperParamBtnClicked)
 
+    def game_over(self):
+        player1_list=list(self.board.get_legal_actions("X"))
+        player2_list=list(self.board.get_legal_actions("O"))
+        is_over=len(player1_list)==0 and len(player2_list)==0
+        return is_over
+
     def setImages(self, layoutImages):
         """设置图片属性
         : layoutImages：图像列表，列表中依次包含三个图像：黑棋、白棋、棋盘
@@ -163,17 +169,6 @@ class ReversiGUI(Frame):
         self.blackImage = layoutImages[0]
         self.whiteImage = layoutImages[1]
         self.boardImage = layoutImages[2]
-
-    def initialBoard(self, board):
-        """初始化棋盘"""
-        for x in range(8):
-            for y in range(8):
-                board[x][y] = "."
-
-        board[3][3] = "O"
-        board[3][4] = "X"
-        board[4][3] = "X"
-        board[4][4] = "O"
 
     def drawBoard(self, boardCanvas):
         """绘制棋盘"""
@@ -186,26 +181,46 @@ class ReversiGUI(Frame):
         for x in range(8):
             for y in range(8):
                 if board[x][y] == "X":
-                    boardCanvas.create_image((x*80+80, y*80+80),
+                    boardCanvas.create_image((y*80+80,x*80+80),
                                              image=self.blackImage)
                     boardCanvas.pack()
                 elif board[x][y] == "O":
-                    boardCanvas.create_image((x*80+80, y*80+80),
+                    boardCanvas.create_image((y*80+80,x*80+80),
                                              image=self.whiteImage)
                     boardCanvas.pack()
-
+    def AIGo(self,color):
+        time.sleep(10)
+        if color=="X":
+            action=self.player1.get_move(self.board)
+            self.board.move(action,"X")
+        else:
+            action=self.player2.get_move(self.board)
+            self.board.move(action,"O")
+        self.blackCountLabel['text']=str(self.board.count("X"))
+        self.whiteCountLabel['text']=str(self.board.count("O"))
+        self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
     def moveNext(self, event):
         """下棋"""
         startTime = datetime.datetime.now()
-        row = int((event.x - 40) / 80)
-        col = int((event.y - 40) / 80)
+        col = int((event.x - 40) / 80)
+        row = int((event.y - 40) / 80)
         if row > 7 or col > 7:
             return
-        if self.board[row][col] == ".":
-            self.board[row][col] = "X"
+        if self.board.board[row][col] == ".":
             self.blackCount += 1
             self.blackCountLabel["text"] = "{:0>2}".format(self.blackCount)
-            self.drawAll(board=self.board, boardCanvas=self.boardCanvas)
+            if self.selectedPieceValue.get()==1:
+                self.board.move([row,col],"X")
+                self.blackCountLabel['text']=str(self.board.count("X"))
+                self.whiteCountLabel['text']=str(self.board.count("O"))
+                self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
+                self.AIGo("O")
+            else:
+                self.board.move([row,col],"O")
+                self.blackCountLabel['text']=str(self.board.count("X"))
+                self.whiteCountLabel['text']=str(self.board.count("O"))
+                self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
+                self.AIGo("X")
             self.stepCount = self.stepCount + 1
             overTime = datetime.datetime.now()
             timeConsuming = (overTime-startTime).microseconds
@@ -257,8 +272,8 @@ class ReversiGUI(Frame):
                 self.blackCountLabel["text"] = "02"
                 self.whiteCountLabel["text"] = "02"
                 self.boardCanvas.delete(tkinter.ALL)
-                self.initialBoard(self.board)
-                self.drawAll(self.board, self.boardCanvas)
+                self.board=Board()
+                self.drawAll(self.board.board, self.boardCanvas)
                 self.stepDelayMessage.config(state="normal")
                 self.stepDelayMessage.delete("1.0", "end")
                 self.stepDelayMessage.insert("end", "各步延时为：\n")
@@ -287,8 +302,13 @@ class ReversiGUI(Frame):
         """人机战按钮点击事件"""
         if self.selectedPieceValue.get() == 2:
             self.selectBlackRadioBtn.config(state="disable")
+            player1=AIPlayer("X")
+            player2=HumanPlayer("O")
+            self.AIGo("X")
         else:
             self.selectWhiteRadioBtn.config(state="disable")
+            player1=HumanPlayer("X")
+            player2=AIPlayer("O")
         self.playMode = PlayMode.HUMANVSAI
         messagebox.showinfo("人机战", "当前模式为人机战")
 

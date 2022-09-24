@@ -4,7 +4,7 @@ from turtle import pos
 class Board(object):
     def __init__(self):
         self.empty='.'
-        self.board=[[self.empty for _ in range(8)]for _ in range(8)]
+        self.board=[['.' for _ in range(8)]for _ in range(8)]
         self.board[3][4]='X'
         self.board[4][3]='X'
         self.board[3][3]='O'

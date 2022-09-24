@@ -27,14 +27,14 @@ class RandomPlayer:
 class HumanPlayer:
     def __init__(self,color):
         self.color=color
-    def get_move(self,board):
+    def get_move(self,board,x,y):
         if self.color=="X":
             player="player1"
         else:
             player="player2"
         while True:
             action=[]
-            m, n = map(int, input().split())
+            m,n=x,y
             action.append(m)
             action.append(n)
             print(board.get_legal_actions(self.color))
@@ -63,7 +63,7 @@ class Node:
         child_node=Node(new_state,color,self,action)
         self.children.append(child_node)
 
-    def if_fully_expand(self):
+    def fully_expand(self):
         cnt_max=len(list(self.state.get_legal_actions(self.color)))
         cnt_now=len(self.children)
         if cnt_max<=cnt_now:
@@ -74,22 +74,27 @@ class Node:
 class AIPlayer:
     def __init__(self,color):
         self.color=color
-        self.d={}
         self.roxanne_table = [[[0, 0], [7, 0], [0, 7], [7, 7]], [[2, 2], [5, 2], [2, 5], [5, 5]], [[2, 3], [5, 3], [2, 4], [5, 4], [3, 2], [4, 2], [3, 5], [4, 5]], [[0, 2], [7, 2], [0, 5], [7, 5], [2, 0], [5, 0], [2, 7], [5, 7]], [[0, 3], [7, 3], [0, 4], [7, 4], [3, 0], [4, 0], [3, 7], [4, 7]], [[1, 2], [6, 2], [1, 5], [6, 5], [2, 1], [5, 1], [2, 6], [5, 6]], [[1, 3], [6, 3], [1, 4], [6, 4], [3, 1], [4, 1], [3, 6], [4, 6]], [[1, 1], [6, 1], [1, 6], [6, 6]], [[0, 1], [7, 1], [0, 6], [7, 6], [1, 0], [6, 0], [1, 7], [6, 7]]]
         count=0
-        for t in self.roxanne_table:
-            count+=1
-            for num in t:
-                self.d[num[0],num[1]]=count
+        self.table = [[[0, 0], [0, 7], [7, 0], [7, 7]],
+            [[0, 2], [0, 5], [2, 0], [5, 0], [2, 7], [5, 7], [7, 2], [7, 5]],
+            [[2, 2], [2, 5], [5, 2], [5, 5]],
+            [[3, 0], [4, 0], [0, 3], [0, 4], [7, 3], [7, 4], [3, 7], [4, 7]],
+            [[3, 2], [4, 2], [2, 3], [2, 4], [3, 5], [4, 5], [5, 3], [5, 4]],
+            [[3, 3], [4, 4], [3, 4], [4, 3]],
+            [[1, 3], [1, 4], [3, 1], [4, 1], [6, 3], [6, 4], [3, 6], [4, 6]],
+            [[1, 2], [1, 5], [2, 1], [5, 1], [6, 2], [6, 5], [2, 6], [5, 6]],
+            [[0, 1], [0, 6], [7, 1], [7, 6], [1, 0], [6, 0], [1, 7], [6, 7]],
+            [[1, 1], [6, 6], [1, 6], [6, 1]]]
     def if_terminal(self,state):
-        action_player1=list(state.get_legal_actions("X"))
-        action_player2=list(state.get_legal_actions("O"))
+        action_player1=state.get_legal_actions("X")
+        action_player2=state.get_legal_actions("O")
         if len(action_player1)==0 and len(action_player2)==0:
             return True
         else:
             return False
     
-    def backpropagate(sel,node,player1_val,player2_val):
+    def BackPropagate(sel,node,player1_val,player2_val):
         while node is not None:
             node.visit+=1
             node.player1_value+=player1_val
@@ -97,27 +102,39 @@ class AIPlayer:
             node=node.parent
         return 0
 
-    def reverse_color(self,color):
-        return 'O' if color=='X' else 'X'
+    def get_score(self,board,color):
+        ans=0
+        for i in range(8):
+            for j in range(8):
+                    for m in range(10):
+                        for t in self.table[m]:
+                            if board[i][j]==color:
+                                if t == [i, j]:
+                                    ans += 11-m
+                
 
-    def stimulate_policy(self,node):
+        return ans   
+
+    def SimulatePolicy(self,node):
         board=copy.deepcopy(node.state)
         color=copy.deepcopy(node.color)
         cnt=0
         while not self.if_terminal(board):
             actions=list(node.state.get_legal_actions(color))
             if len(actions)==0:
-                color=self.reverse_color(color)
+                color='O' if color=='X' else 'X'
             else:
                 action=random.choice(actions)
                 board.move(action,color)
-                color=self.reverse_color(color)
+                color='O' if color=='X' else 'X'
             cnt+=1
             if cnt>20:
                 break
-        return board.count('X'),board.count('O')
+        XValue=self.get_score(board,'X')
+        OValue=self.get_score(board,'O')
+        return XValue,OValue
     
-    def ucb(self,node,uct_scalar=1.0):
+    def UCB1(self,node,uct_scalar=1.0):
         max=-float('inf')
         max_set=[]
         for c in node.children:
@@ -125,7 +142,7 @@ class AIPlayer:
             if c.color=='O':
                 exploit=c.player1_value/(c.player1_value+c.player2_value)
             else:
-                exploit=c.player1_value/(c.player1_value+c.player2_value)
+                exploit=c.player2_value/(c.player1_value+c.player2_value)
             explore=math.sqrt(2*math.log(node.visit)/float(c.visit))
             uct_score=exploit+explore*uct_scalar
             if uct_score==max:
@@ -133,14 +150,12 @@ class AIPlayer:
             elif uct_score>max:
                 max_set=[c]
                 max=uct_score
-        sum=[t.action for t in max_set]
-        print(sum)
         if len(max_set)==0:
             return node.parent
         else:
             return random.choice(max_set)
     
-    def expand(self,node):
+    def Expand(self,node):
         actions_legal=list(node.state.get_legal_actions(node.color))
         actions_already=[c.action for c in node.children]
         action=random.choice(actions_legal)
@@ -148,27 +163,27 @@ class AIPlayer:
             action=random.choice(actions_legal)
         new_state=copy.deepcopy(node.state)
         new_state.move(action,node.color)
-        new_color=self.reverse_color(node.color)
+        new_color='O' if node.color=='X' else 'X'
         node.add_child(new_state,action=action,color=new_color)
         return node.children[-1]
 
-    def select_policy(self,node):
+    def SelectPolicy(self,node):
         while(not self.if_terminal(node.state)):
             if len(list(node.state.get_legal_actions(node.color)))==0:
                 return node
-            elif not node.if_fully_expand():
-                new_node=self.expand(node)
+            elif not node.fully_expand():
+                new_node=self.Expand(node)
                 return new_node
             else:
-                node=self.ucb(node)
+                node=self.UCB1(node)
         return node
 
-    def MCTS_search(self,root,maxt=100):
+    def UCTSearch(self,root,maxt=100):
         for t in range(maxt):
-            leave=self.select_policy(root)
-            player1_count,player2_count=self.stimulate_policy(leave)
-            self.backpropagate(leave,player1_count,player2_count)
-        return self.ucb(root).action
+            leave=self.SelectPolicy(root)
+            player1_count,player2_count=self.SimulatePolicy(leave)
+            self.BackPropagate(leave,player1_count,player2_count)
+        return self.UCB1(root).action
 
     def get_move(self,board):
         if self.color=='X':
@@ -178,13 +193,13 @@ class AIPlayer:
         action=None
         root_board=copy.deepcopy(board)
         root=Node(state=root_board,color=self.color)
-        action=self.MCTS_search(root)
+        action=self.UCTSearch(root)
         return action
 
 class RoxannePlayer(object):
 
     def __init__(self, color):
-        self.roxanne_table = priority_table = [[[0, 0], [0, 7], [7, 0], [7, 7]],
+        self.table = priority_table = [[[0, 0], [0, 7], [7, 0], [7, 7]],
                   [[0, 2], [0, 5], [2, 0], [5, 0], [2, 7], [5, 7], [7, 2], [7, 5]],
                   [[2, 2], [2, 5], [5, 2], [5, 5]],
                   [[3, 0], [4, 0], [0, 3], [0, 4], [7, 3], [7, 4], [3, 7], [4, 7]],
@@ -202,7 +217,7 @@ class RoxannePlayer(object):
         if len(action_list) == 0:
             return None
         else:
-            for move_list in self.roxanne_table:
+            for move_list in self.table:
                 random.shuffle(move_list)
                 for move in move_list:
                     if move in action_list:
@@ -214,7 +229,6 @@ class RoxannePlayer(object):
             player_name = 'player1'
         else:
             player_name = 'player2'
-        # print("请等一会，对方 {}-{} 正在思考中...".format(player_name, self.color))
         action = self.roxanne_select(board)
         return action
 

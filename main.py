@@ -10,8 +10,8 @@ from Board import Board
 win1=0
 win2=0
 win3=0
-for i in range(100):
-    player1=RoxannePlayer("X")
+for i in range(20):
+    player1=AIPlayer("X")
     player2=RoxannePlayer("O")
     #player1=RoxannePlayer("X")
     #player2=HumanPlayer("O")
