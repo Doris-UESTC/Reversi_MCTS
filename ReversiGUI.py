@@ -189,6 +189,7 @@ class ReversiGUI(Frame):
                                              image=self.whiteImage)
                     boardCanvas.pack()
 
+        self.boardCanvas.update_idletasks()
         if self.game_over() == True:
             self.stepDelayMessage.config(state="normal")
             self.stepDelayMessage.insert(
@@ -197,7 +198,7 @@ class ReversiGUI(Frame):
             self.gameOverMessage()
 
     def AIGo(self, color):
-        # time.sleep(1)
+        # time.sleep(0.5)
         if self.playMode == PlayMode.HUMANVSAI and len(list(self.board.get_legal_actions(color))) == 0 and self.game_over() == False:
             if color == "X":
                 messagebox.showinfo("说明", "黑棋无子可下，请白棋继续落子。")
@@ -262,8 +263,8 @@ class ReversiGUI(Frame):
 
     def moveNext(self, event):
         """下棋"""
-        if self.playMode == PlayMode.AIVSAI:
-            return
+        # if self.playMode == PlayMode.AIVSAI:
+        #     return
         if self.judgePlayMode() == False:
             return
         if self.game_over() == True:
@@ -325,6 +326,9 @@ class ReversiGUI(Frame):
         else:
             self.playMode = PlayMode.NONE
             self.stepCount = 0
+            self.player1 = HumanPlayer("X")
+            self.player2 = AIPlayer("O")
+            self.game = Game(self.player1, self.player2)
             self.blackCountLabel["text"] = "02"
             self.whiteCountLabel["text"] = "02"
             self.boardCanvas.delete(tkinter.ALL)
