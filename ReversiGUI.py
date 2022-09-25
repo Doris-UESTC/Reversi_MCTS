@@ -244,7 +244,7 @@ class ReversiGUI(Frame):
         return True
 
     def gameOverMessage(self):
-        """判断游戏是否结束"""
+        """游戏结束提示信息"""
         blackCount = self.board.count("X")
         whiteCount = self.board.count("O")
         if whiteCount == 0 or (blackCount + whiteCount == 64 and blackCount > whiteCount):
@@ -325,7 +325,6 @@ class ReversiGUI(Frame):
         else:
             self.playMode = PlayMode.HUMANVSAI
             self.stepCount = 0
-
             self.blackCountLabel["text"] = "02"
             self.whiteCountLabel["text"] = "02"
             self.boardCanvas.delete(tkinter.ALL)
