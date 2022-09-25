@@ -203,6 +203,7 @@ class ReversiGUI(Frame):
                 messagebox.showinfo("说明", "黑棋无子可下，请白棋继续落子。")
             else:
                 messagebox.showinfo("说明", "白棋无子可下，请黑棋继续落子。")
+            self.stepCount = self.stepCount - 1
             return
         startTime = datetime.datetime.now()
         if color == "X":
@@ -227,6 +228,7 @@ class ReversiGUI(Frame):
                 messagebox.showinfo("说明", "黑棋无子可下，白棋将继续落子。")
             else:
                 messagebox.showinfo("说明", "白棋无子可下，黑棋将继续落子。")
+            self.stepCount = self.stepCount + 1
             self.AIGo(color)
 
     def judgeLegal(self, ans, location):
