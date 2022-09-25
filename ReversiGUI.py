@@ -188,8 +188,8 @@ class ReversiGUI(Frame):
                     boardCanvas.create_image((y*80+80, x*80+80),
                                              image=self.whiteImage)
                     boardCanvas.pack()
-        
-        if self.game.game_over() == True:
+
+        if self.game_over() == True:
             self.stepDelayMessage.config(state="normal")
             self.stepDelayMessage.insert(
                 "end", "Sum: " + str(self.sumStepDealy) + "ms")
@@ -197,12 +197,20 @@ class ReversiGUI(Frame):
             self.gameOverMessage()
 
     def AIGo(self, color):
-        time.sleep(0.25)
+        # time.sleep(1)
+        if self.playMode == PlayMode.HUMANVSAI and len(list(self.board.get_legal_actions(color))) == 0 and self.game_over() == False:
+            if color == "X":
+                messagebox.showinfo("说明", "黑棋无子可下，请白棋继续落子。")
+            else:
+                messagebox.showinfo("说明", "白棋无子可下，请黑棋继续落子。")
+            return
         startTime = datetime.datetime.now()
         if color == "X":
+            enemyColor = "O"
             action = self.player1.get_move(self.board)
             self.board.move(action, "X")
         else:
+            enemyColor = "X"
             action = self.player2.get_move(self.board)
             self.board.move(action, "O")
         self.blackCountLabel['text'] = "{:0>2}".format(
@@ -210,11 +218,16 @@ class ReversiGUI(Frame):
         self.whiteCountLabel['text'] = "{:0>2}".format(
             str(self.board.count("O")))
         overTime = datetime.datetime.now()
-        overTime = datetime.datetime.now()
         timeConsuming = int((overTime-startTime).microseconds / 1000)
         self.printStepDealayMessage(timeConsuming=timeConsuming)
         self.sumStepDealy = self.sumStepDealy + timeConsuming
         self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
+        while self.playMode == PlayMode.HUMANVSAI and len(list(self.board.get_legal_actions(enemyColor))) == 0 and self.game_over() == False:
+            if enemyColor == "X":
+                messagebox.showinfo("说明", "黑棋无子可下，白棋将继续落子。")
+            else:
+                messagebox.showinfo("说明", "白棋无子可下，黑棋将继续落子。")
+            self.AIGo(color)
 
     def judgeLegal(self, ans, location):
         """判断落子是否合法"""
@@ -226,7 +239,7 @@ class ReversiGUI(Frame):
     def judgePlayMode(self):
         """判断对战模式"""
         if self.playMode == PlayMode.NONE:
-            messagebox.showwarning("警告","请选择执棋和对战模式！")
+            messagebox.showwarning("警告", "请选择执棋和对战模式！")
             return False
         return True
 
@@ -269,15 +282,15 @@ class ReversiGUI(Frame):
                 self.whiteCountLabel['text'] = "{:0>2}".format(
                     str(self.board.count("O")))
                 self.drawAll(board=self.board.board,
-                              boardCanvas=self.boardCanvas)
+                             boardCanvas=self.boardCanvas)
                 self.AIGo("O")
             else:
                 self.board.move([row, col], "O")
                 self.blackCountLabel['text'] = str(self.board.count("X"))
                 self.whiteCountLabel['text'] = str(self.board.count("O"))
                 self.drawAll(board=self.board.board,
-                              boardCanvas=self.boardCanvas)
-                self.AIGo("X")            
+                             boardCanvas=self.boardCanvas)
+                self.AIGo("X")
 
     def printStepDealayMessage(self, timeConsuming):
         """打印每一步时延"""
@@ -312,6 +325,7 @@ class ReversiGUI(Frame):
         else:
             self.playMode = PlayMode.HUMANVSAI
             self.stepCount = 0
+
             self.blackCountLabel["text"] = "02"
             self.whiteCountLabel["text"] = "02"
             self.boardCanvas.delete(tkinter.ALL)
@@ -343,22 +357,30 @@ class ReversiGUI(Frame):
 
     def humanAIButtonClicked(self):
         """人机战按钮点击事件"""
+        messagebox.showinfo("人机战", "当前模式为人机战")
+        self.playMode = PlayMode.HUMANVSAI
         if self.selectedPieceValue.get() == 1:
             self.selectWhiteRadioBtn.config(state="disable")
-            player1 = HumanPlayer("X")
-            player2 = AIPlayer("O")
+            self.player1 = HumanPlayer("X")
+            self.player2 = AIPlayer("O")
         else:
+            self.stepCount = self.stepCount + 1
             self.selectBlackRadioBtn.config(state="disable")
-            player1 = AIPlayer("X")
-            player2 = HumanPlayer("O")
+            self.player1 = AIPlayer("X")
+            self.player2 = HumanPlayer("O")
             self.AIGo("X")
-        self.playMode = PlayMode.HUMANVSAI
-        messagebox.showinfo("人机战", "当前模式为人机战")
 
     def aiButtonClicked(self):
         """人机战按钮点击事件"""
         self.playMode = PlayMode.AIVSAI
         messagebox.showinfo("AI对战", "当前模式为AI对战")
+        self.player1 = AIPlayer("X")
+        self.player2 = AIPlayer("O")
+        while self.game_over() == False:
+            self.stepCount = self.stepCount + 1
+            self.AIGo("X")
+            self.stepCount = self.stepCount + 1
+            self.AIGo("O")
 
 
 class PlayMode(Enum):
