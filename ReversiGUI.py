@@ -16,7 +16,8 @@ from enum import Enum
 import datetime
 from Board import Board
 from Game import Game
-from MCTS import AIPlayer,HumanPlayer,RoxannePlayer
+from MCTS import AIPlayer, HumanPlayer, RoxannePlayer
+
 
 class ReversiGUI(Frame):
     """黑白棋GUI"""
@@ -24,19 +25,17 @@ class ReversiGUI(Frame):
     def __init__(self, master=None, layoutImages=None):
         super().__init__(master)
         self.master = master
-        self.player1 = AIPlayer("X")
+        self.player1 = HumanPlayer("X")
         self.player2 = AIPlayer("O")
-        self.game=Game(self.player1,self.player2)
+        self.game = Game(self.player1, self.player2)
         self.setImages(layoutImages)
-        self.blackCount = 2
-        self.whiteCount = 2
         self.stepCount = 0
         self.sumStepDealy = 0
         self.selectedPieceValue = tkinter.IntVar()  # 调用get()，值为 1 是黑棋，2 是白棋
         self.superParameter = float("{:0.12f}".format(sqrt(2)/2))
         self.board = Board()
         self.boardCanvas = ""
-        self.playMode = PlayMode.HUMANVSAI
+        self.playMode = PlayMode.NONE
         self.initialLayout()
         self.pack()
 
@@ -51,7 +50,7 @@ class ReversiGUI(Frame):
 
         # 设置区
         settingFrame = tkinter.Frame(
-            root, bg="#13693B", width=200, height=720, relief='flat')
+            master, bg="#13693B", width=200, height=720, relief='flat')
         settingFrame.pack(side=tkinter.RIGHT)
 
         # 设置区-标题-黑白棋
@@ -158,9 +157,9 @@ class ReversiGUI(Frame):
         restoreSuperParamBtn.config(command=self.restoreSuperParamBtnClicked)
 
     def game_over(self):
-        player1_list=list(self.board.get_legal_actions("X"))
-        player2_list=list(self.board.get_legal_actions("O"))
-        is_over=len(player1_list)==0 and len(player2_list)==0
+        player1_list = list(self.board.get_legal_actions("X"))
+        player2_list = list(self.board.get_legal_actions("O"))
+        is_over = len(player1_list) == 0 and len(player2_list) == 0
         return is_over
 
     def setImages(self, layoutImages):
@@ -182,68 +181,105 @@ class ReversiGUI(Frame):
         for x in range(8):
             for y in range(8):
                 if board[x][y] == "X":
-                    boardCanvas.create_image((y*80+80,x*80+80),
+                    boardCanvas.create_image((y*80+80, x*80+80),
                                              image=self.blackImage)
                     boardCanvas.pack()
                 elif board[x][y] == "O":
-                    boardCanvas.create_image((y*80+80,x*80+80),
+                    boardCanvas.create_image((y*80+80, x*80+80),
                                              image=self.whiteImage)
                     boardCanvas.pack()
-    def AIGo(self,color):
+        
+        if self.game.game_over() == True:
+            self.stepDelayMessage.config(state="normal")
+            self.stepDelayMessage.insert(
+                "end", "Sum: " + str(self.sumStepDealy) + "ms")
+            self.stepDelayMessage.config(state="disable")
+            self.gameOverMessage()
+
+    def AIGo(self, color):
         time.sleep(0.25)
-        if color=="X":
-            action=self.player1.get_move(self.board)
-            self.board.move(action,"X")
+        startTime = datetime.datetime.now()
+        if color == "X":
+            action = self.player1.get_move(self.board)
+            self.board.move(action, "X")
         else:
-            action=self.player2.get_move(self.board)
-            self.board.move(action,"O")
-        self.blackCountLabel['text']= "{:0>2}".format(str(self.board.count("X")))
-        self.whiteCountLabel['text']="{:0>2}".format(str(self.board.count("O")))
+            action = self.player2.get_move(self.board)
+            self.board.move(action, "O")
+        self.blackCountLabel['text'] = "{:0>2}".format(
+            str(self.board.count("X")))
+        self.whiteCountLabel['text'] = "{:0>2}".format(
+            str(self.board.count("O")))
+        overTime = datetime.datetime.now()
+        overTime = datetime.datetime.now()
+        timeConsuming = int((overTime-startTime).microseconds / 1000)
+        self.printStepDealayMessage(timeConsuming=timeConsuming)
+        self.sumStepDealy = self.sumStepDealy + timeConsuming
         self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
-    
+
     def judgeLegal(self, ans, location):
-        """判断是否合法"""
+        """判断落子是否合法"""
         if location in ans:
             return True
         messagebox.showerror("警告", "棋子位置不合法，请重新选择落子位置！")
         return False
 
+    def judgePlayMode(self):
+        """判断对战模式"""
+        if self.playMode == PlayMode.NONE:
+            messagebox.showwarning("警告","请选择执棋和对战模式！")
+            return False
+        return True
+
+    def gameOverMessage(self):
+        """判断游戏是否结束"""
+        blackCount = self.board.count("X")
+        whiteCount = self.board.count("O")
+        if whiteCount == 0 or (blackCount + whiteCount == 64 and blackCount > whiteCount):
+            resultStr = "黑棋胜利！"
+        elif blackCount == 0 or (blackCount + whiteCount == 64 and blackCount < whiteCount):
+            resultStr = "白棋胜利！"
+        elif blackCount + whiteCount == 64 and blackCount == whiteCount:
+            resultStr = "平局"
+        result = messagebox.askyesno(
+            "游戏结束", "本局游戏已结束，" + resultStr + "\n是否开始新一局？")
+        if result == True:
+            self.newGame()
+
     def moveNext(self, event):
         """下棋"""
+        if self.judgePlayMode() == False:
+            return
+        if self.game_over() == True:
+            self.gameOverMessage()
+            return
         col = int((event.x - 40) / 80)
         row = int((event.y - 40) / 80)
         if row > 7 or col > 7:
             return
-        ans = self.board.get_legal_actions("O" if self.selectedPieceValue.get() == 2 else "X")
+        ans = self.board.get_legal_actions(
+            "O" if self.selectedPieceValue.get() == 2 else "X")
         if self.judgeLegal(ans, [row, col]) == False:
             return
         if self.board.board[row][col] == ".":
-            self.blackCount += 1
-            self.blackCountLabel["text"] = "{:0>2}".format(self.blackCount)
-            if self.selectedPieceValue.get()==1:
-                self.board.move([row,col],"X")
-                self.blackCountLabel['text']="{:0>2}".format(str(self.board.count("X")))
-                self.whiteCountLabel['text']="{:0>2}".format(str(self.board.count("O")))
-                self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
-                startTime = datetime.datetime.now()
+            if self.selectedPieceValue.get() == 1:
+                self.board.move([row, col], "X")
+                self.blackCountLabel['text'] = "{:0>2}".format(
+                    str(self.board.count("X")))
+                self.whiteCountLabel['text'] = "{:0>2}".format(
+                    str(self.board.count("O")))
+                # self.drawAll(board=self.board.board,
+                #              boardCanvas=self.boardCanvas)
+                # startTime = datetime.datetime.now()
                 self.AIGo("O")
             else:
-                self.board.move([row,col],"O")
-                self.blackCountLabel['text']=str(self.board.count("X"))
-                self.whiteCountLabel['text']=str(self.board.count("O"))
-                self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
-                startTime = datetime.datetime.now()
+                self.board.move([row, col], "O")
+                self.blackCountLabel['text'] = str(self.board.count("X"))
+                self.whiteCountLabel['text'] = str(self.board.count("O"))
+                # self.drawAll(board=self.board.board,
+                #              boardCanvas=self.boardCanvas)
+                # startTime = datetime.datetime.now()
                 self.AIGo("X")
             self.stepCount = self.stepCount + 1
-            overTime = datetime.datetime.now()
-            timeConsuming = (overTime-startTime).microseconds - 250
-            self.printStepDealayMessage(timeConsuming=timeConsuming)
-            self.sumStepDealy = self.sumStepDealy + timeConsuming
-            if self.blackCount == 62:
-                self.stepDelayMessage.config(state="normal")
-                self.stepDelayMessage.insert(
-                    "end", "Sum: " + str(self.sumStepDealy) + "ms")
-                self.stepDelayMessage.config(state="disable")
 
     def printStepDealayMessage(self, timeConsuming):
         """打印每一步时延"""
@@ -268,7 +304,7 @@ class ReversiGUI(Frame):
             self.selectWhiteRadioBtn.config(state="active")
         else:
             self.selectBlackRadioBtn.config(state="active")
-        if self.blackCount == 2 and self.whiteCount == 2:
+        if self.board.count("X") == 2 and self.board.count("O") == 2:
             self.superParameter = float("{:0.12f}".format(sqrt(2)/2))
             self.superParameterText["textvariable"] = StringVar(
                 self.superParameterText, str(self.superParameter))
@@ -276,21 +312,17 @@ class ReversiGUI(Frame):
                 title="警告", message="当前已是新局！")
             return
         else:
-            getNewGame = messagebox.askyesno(
-                title="警告", message="是否结束当前游戏，开启新一局？")
-            if getNewGame == True:
-                self.blackCount = 2
-                self.whiteCount = 2
-                self.stepCount = 0
-                self.blackCountLabel["text"] = "02"
-                self.whiteCountLabel["text"] = "02"
-                self.boardCanvas.delete(tkinter.ALL)
-                self.board=Board()
-                self.drawAll(self.board.board, self.boardCanvas)
-                self.stepDelayMessage.config(state="normal")
-                self.stepDelayMessage.delete("1.0", "end")
-                self.stepDelayMessage.insert("end", "各步延时为：\n")
-                self.stepDelayMessage.config(state="disable")
+            self.playMode = PlayMode.HUMANVSAI
+            self.stepCount = 0
+            self.blackCountLabel["text"] = "02"
+            self.whiteCountLabel["text"] = "02"
+            self.boardCanvas.delete(tkinter.ALL)
+            self.board = Board()
+            self.drawAll(self.board.board, self.boardCanvas)
+            self.stepDelayMessage.config(state="normal")
+            self.stepDelayMessage.delete("1.0", "end")
+            self.stepDelayMessage.insert("end", "各步延时为：\n")
+            self.stepDelayMessage.config(state="disable")
 
     def changeSuperParamBtnClicked(self):
         """修改超参数"""
@@ -313,15 +345,15 @@ class ReversiGUI(Frame):
 
     def humanAIButtonClicked(self):
         """人机战按钮点击事件"""
-        if self.selectedPieceValue.get() == 2:
-            self.selectBlackRadioBtn.config(state="disable")
-            player1=AIPlayer("X")
-            player2=HumanPlayer("O")
-            self.AIGo("X")
-        else:
+        if self.selectedPieceValue.get() == 1:
             self.selectWhiteRadioBtn.config(state="disable")
-            player1=HumanPlayer("X")
-            player2=AIPlayer("O")
+            player1 = HumanPlayer("X")
+            player2 = AIPlayer("O")
+        else:
+            self.selectBlackRadioBtn.config(state="disable")
+            player1 = AIPlayer("X")
+            player2 = HumanPlayer("O")
+            self.AIGo("X")
         self.playMode = PlayMode.HUMANVSAI
         messagebox.showinfo("人机战", "当前模式为人机战")
 
@@ -334,6 +366,7 @@ class ReversiGUI(Frame):
 class PlayMode(Enum):
     HUMANVSAI = 1
     AIVSAI = 2
+    NONE = 3
 
 
 def resizeImage(width, height, imagePath):
