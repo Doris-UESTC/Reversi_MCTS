@@ -66,7 +66,7 @@ class ReversiGUI(Frame):
         countFrame = tkinter.Frame(settingFrame)
         countFrame.pack()
 
-        pieceImage = Canvas(countFrame, bg="#13693B", width=200,
+        pieceImage = tkinter.Canvas(countFrame, bg="#13693B", width=200,
                             height=130, borderwidth=-2)
         pieceImage.create_image((60, 55), image=images[0])
         pieceImage.create_image((140, 55), image=images[1])
@@ -279,20 +279,16 @@ class ReversiGUI(Frame):
             self.stepCount = self.stepCount + 1
             if self.selectedPieceValue.get() == 1:
                 self.board.move([row, col], "X")
-                self.blackCountLabel['text'] = "{:0>2}".format(
-                    str(self.board.count("X")))
-                self.whiteCountLabel['text'] = "{:0>2}".format(
-                    str(self.board.count("O")))
                 self.drawAll(board=self.board.board,
                              boardCanvas=self.boardCanvas)
                 self.AIGo("O")
             else:
                 self.board.move([row, col], "O")
-                self.blackCountLabel['text'] = str(self.board.count("X"))
-                self.whiteCountLabel['text'] = str(self.board.count("O"))
                 self.drawAll(board=self.board.board,
                              boardCanvas=self.boardCanvas)
                 self.AIGo("X")
+            self.blackCountLabel['text'] = "{:0>2}".format(str(self.board.count("X")))
+            self.whiteCountLabel['text'] = "{:0>2}".format(str(self.board.count("O")))
 
     def printStepDealayMessage(self, timeConsuming):
         """打印每一步时延"""
