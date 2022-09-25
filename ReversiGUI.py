@@ -261,25 +261,23 @@ class ReversiGUI(Frame):
         if self.judgeLegal(ans, [row, col]) == False:
             return
         if self.board.board[row][col] == ".":
+            self.stepCount = self.stepCount + 1
             if self.selectedPieceValue.get() == 1:
                 self.board.move([row, col], "X")
                 self.blackCountLabel['text'] = "{:0>2}".format(
                     str(self.board.count("X")))
                 self.whiteCountLabel['text'] = "{:0>2}".format(
                     str(self.board.count("O")))
-                # self.drawAll(board=self.board.board,
-                #              boardCanvas=self.boardCanvas)
-                # startTime = datetime.datetime.now()
+                self.drawAll(board=self.board.board,
+                              boardCanvas=self.boardCanvas)
                 self.AIGo("O")
             else:
                 self.board.move([row, col], "O")
                 self.blackCountLabel['text'] = str(self.board.count("X"))
                 self.whiteCountLabel['text'] = str(self.board.count("O"))
-                # self.drawAll(board=self.board.board,
-                #              boardCanvas=self.boardCanvas)
-                # startTime = datetime.datetime.now()
-                self.AIGo("X")
-            self.stepCount = self.stepCount + 1
+                self.drawAll(board=self.board.board,
+                              boardCanvas=self.boardCanvas)
+                self.AIGo("X")            
 
     def printStepDealayMessage(self, timeConsuming):
         """打印每一步时延"""
