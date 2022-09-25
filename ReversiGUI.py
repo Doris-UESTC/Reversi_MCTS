@@ -263,8 +263,8 @@ class ReversiGUI(Frame):
 
     def moveNext(self, event):
         """下棋"""
-        # if self.playMode == PlayMode.AIVSAI:
-        #     return
+        if self.playMode == PlayMode.AIVSAI:
+            return
         if self.judgePlayMode() == False:
             return
         if self.game_over() == True:
