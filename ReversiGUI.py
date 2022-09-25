@@ -192,7 +192,7 @@ class ReversiGUI(Frame):
         if self.game_over() == True:
             self.stepDelayMessage.config(state="normal")
             self.stepDelayMessage.insert(
-                "end", "Sum: " + str(self.sumStepDealy) + "ms")
+                "end", "总时延：" + str(self.sumStepDealy) + "ms")
             self.stepDelayMessage.config(state="disable")
             self.gameOverMessage()
 
@@ -294,8 +294,8 @@ class ReversiGUI(Frame):
 
     def printStepDealayMessage(self, timeConsuming):
         """打印每一步时延"""
-        message = "Step " + \
-            "{:0>2}".format(str(self.stepCount)) + ": " + \
+        message = "第 " + \
+            "{:0>2}".format(str(self.stepCount)) + " 步：" + \
             str(timeConsuming) + "ms\n"
         self.stepDelayMessage.config(state="normal")
         self.stepDelayMessage.insert("end", message)
@@ -342,7 +342,7 @@ class ReversiGUI(Frame):
             return
         self.superParameter = tempSuperParameter
         messagebox.showinfo("超参设置", "超参数已修改为 " +
-                            str(self.superParameter) + "！")
+                            str(self.superParameter) + " ！")
 
     def restoreSuperParamBtnClicked(self):
         """复位超参"""
@@ -352,7 +352,7 @@ class ReversiGUI(Frame):
         self.superParameterText["textvariable"] = StringVar(
             self.superParameterText, str(self.superParameter))
         messagebox.showinfo("超参设置", "超参数已复位为 " +
-                            str(self.superParameter) + "！")
+                            str(self.superParameter) + " ！")
 
     def humanAIButtonClicked(self):
         """人机战按钮点击事件"""
