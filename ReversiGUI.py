@@ -247,12 +247,12 @@ class ReversiGUI(Frame):
         """游戏结束提示信息"""
         blackCount = self.board.count("X")
         whiteCount = self.board.count("O")
-        if whiteCount == 0 or (blackCount + whiteCount == 64 and blackCount > whiteCount):
+        if blackCount > whiteCount:
             resultStr = "黑棋胜利！"
-        elif blackCount == 0 or (blackCount + whiteCount == 64 and blackCount < whiteCount):
+        elif blackCount < whiteCount:
             resultStr = "白棋胜利！"
-        elif blackCount + whiteCount == 64 and blackCount == whiteCount:
-            resultStr = "平局"
+        elif blackCount == whiteCount:
+            resultStr = "平局！"
         result = messagebox.askyesno(
             "游戏结束", "本局游戏已结束，" + resultStr + "\n是否开始新一局？")
         if result == True:
@@ -323,7 +323,7 @@ class ReversiGUI(Frame):
                 title="警告", message="当前已是新局！")
             return
         else:
-            self.playMode = PlayMode.HUMANVSAI
+            self.playMode = PlayMode.NONE
             self.stepCount = 0
             self.blackCountLabel["text"] = "02"
             self.whiteCountLabel["text"] = "02"
