@@ -29,6 +29,7 @@ class ReversiGUI(Frame):
         self.player2 = AIPlayer("O")
         self.game = Game(self.player1, self.player2)
         self.setImages(layoutImages)
+        self.newGameStart = True
         self.stepCount = 0
         self.sumStepDealy = 0
         self.selectedPieceValue = tkinter.IntVar()  # 调用get()，值为 1 是黑棋，2 是白棋
@@ -188,7 +189,7 @@ class ReversiGUI(Frame):
                     boardCanvas.create_image((y*80+80, x*80+80),
                                              image=self.whiteImage)
                     boardCanvas.pack()
-
+        
         self.boardCanvas.update_idletasks()
         if self.game_over() == True:
             self.stepDelayMessage.config(state="normal")
@@ -199,6 +200,8 @@ class ReversiGUI(Frame):
 
     def AIGo(self, color):
         # time.sleep(0.5)
+        if self.newGameStart == True:
+            return
         if self.playMode == PlayMode.HUMANVSAI and len(list(self.board.get_legal_actions(color))) == 0 and self.game_over() == False:
             if color == "X":
                 messagebox.showinfo("说明", "黑棋无子可下，请白棋继续落子。")
@@ -312,6 +315,7 @@ class ReversiGUI(Frame):
 
     def newGame(self):
         """新一局"""
+        self.newGameStart = True
         if self.selectedPieceValue.get() == 1:
             self.selectWhiteRadioBtn.config(state="active")
         else:
@@ -360,6 +364,7 @@ class ReversiGUI(Frame):
 
     def humanAIButtonClicked(self):
         """人机战按钮点击事件"""
+        self.newGameStart = False
         messagebox.showinfo("人机战", "当前模式为人机战")
         self.playMode = PlayMode.HUMANVSAI
         if self.selectedPieceValue.get() == 1:
@@ -375,6 +380,7 @@ class ReversiGUI(Frame):
 
     def aiButtonClicked(self):
         """人机战按钮点击事件"""
+        self.newGameStart = False
         self.playMode = PlayMode.AIVSAI
         messagebox.showinfo("AI对战", "当前模式为AI对战")
         self.player1 = AIPlayer("X")
