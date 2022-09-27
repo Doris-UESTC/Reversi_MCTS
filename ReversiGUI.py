@@ -328,6 +328,7 @@ class ReversiGUI(Frame):
             self.boardCanvas.delete(tkinter.ALL)
             self.playMode = PlayMode.NONE
             self.stepCount = 0
+            self.sumStepDealy = 0
             self.player1 = HumanPlayer("X")
             self.player2 = AIPlayer("O")
             self.blackCountLabel["text"] = "02"
