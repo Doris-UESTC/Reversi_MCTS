@@ -68,7 +68,7 @@ class ReversiGUI(Frame):
         countFrame.pack()
 
         pieceImage = tkinter.Canvas(countFrame, bg="#13693B", width=200,
-                            height=130, borderwidth=-2)
+                                    height=130, borderwidth=-2)
         pieceImage.create_image((60, 55), image=images[0])
         pieceImage.create_image((140, 55), image=images[1])
         pieceImage.pack()
@@ -189,8 +189,11 @@ class ReversiGUI(Frame):
                     boardCanvas.create_image((y*80+80, x*80+80),
                                              image=self.whiteImage)
                     boardCanvas.pack()
-        
+
         self.boardCanvas.update_idletasks()
+
+        if self.playMode == PlayMode.AIVSAI:
+            return
         if self.game_over() == True:
             self.stepDelayMessage.config(state="normal")
             self.stepDelayMessage.insert(
@@ -199,7 +202,7 @@ class ReversiGUI(Frame):
             self.gameOverMessage()
 
     def AIGo(self, color):
-        # time.sleep(0.5)
+        # time.sleep(0.5)        
         if self.newGameStart == True:
             return
         if self.playMode == PlayMode.HUMANVSAI and len(list(self.board.get_legal_actions(color))) == 0 and self.game_over() == False:
@@ -293,8 +296,10 @@ class ReversiGUI(Frame):
                 self.drawAll(board=self.board.board,
                              boardCanvas=self.boardCanvas)
                 self.AIGo("X")
-            self.blackCountLabel['text'] = "{:0>2}".format(str(self.board.count("X")))
-            self.whiteCountLabel['text'] = "{:0>2}".format(str(self.board.count("O")))
+            self.blackCountLabel['text'] = "{:0>2}".format(
+                str(self.board.count("X")))
+            self.whiteCountLabel['text'] = "{:0>2}".format(
+                str(self.board.count("O")))
 
     def printStepDealayMessage(self, timeConsuming):
         """打印每一步时延"""
@@ -328,6 +333,7 @@ class ReversiGUI(Frame):
                 title="警告", message="当前已是新局！")
             return
         else:
+            self.boardCanvas.delete(tkinter.ALL)
             self.playMode = PlayMode.NONE
             self.stepCount = 0
             self.player1 = HumanPlayer("X")
@@ -335,7 +341,6 @@ class ReversiGUI(Frame):
             self.game = Game(self.player1, self.player2)
             self.blackCountLabel["text"] = "02"
             self.whiteCountLabel["text"] = "02"
-            self.boardCanvas.delete(tkinter.ALL)
             self.board = Board()
             self.drawAll(self.board.board, self.boardCanvas)
             self.stepDelayMessage.config(state="normal")
@@ -378,18 +383,38 @@ class ReversiGUI(Frame):
             self.player2 = HumanPlayer("O")
             self.AIGo("X")
 
-    def aiButtonClicked(self):
-        """人机战按钮点击事件"""
-        self.newGameStart = False
-        self.playMode = PlayMode.AIVSAI
-        messagebox.showinfo("AI对战", "当前模式为AI对战")
+    def aiVSAI(self):
         self.player1 = AIPlayer("X")
         self.player2 = AIPlayer("O")
         while self.game_over() == False:
             self.stepCount = self.stepCount + 1
             self.AIGo("X")
+            ans = self.board.get_legal_actions("O")
+            while len(ans) == 0 and self.game_over() == False:
+                self.stepCount = self.stepCount + 1
+                self.AIGo("X")
+                ans = self.board.get_legal_actions("O")
             self.stepCount = self.stepCount + 1
+            if self.game_over() == True:
+                break
             self.AIGo("O")
+            ans = self.board.get_legal_actions("X")
+            while len(ans) == 0 and self.game_over() == False:
+                self.stepCount = self.stepCount + 1
+                self.AIGo("O")
+                ans = self.board.get_legal_actions("X")
+        self.stepDelayMessage.config(state="normal")
+        self.stepDelayMessage.insert(
+            "end", "总时延：" + str(self.sumStepDealy) + "ms")
+        self.stepDelayMessage.config(state="disable")
+        self.gameOverMessage()
+
+    def aiButtonClicked(self):
+        """人机战按钮点击事件"""
+        self.newGameStart = False
+        self.playMode = PlayMode.AIVSAI
+        messagebox.showinfo("AI对战", "当前模式为AI对战")
+        self.aiVSAI()
 
 
 class PlayMode(Enum):
