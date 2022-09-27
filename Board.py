@@ -10,8 +10,6 @@ class Board(object):
         self.board[3][3]='O'
         self.board[4][4]='O'
         self.dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]
-    def __getitem__(self,index):
-        return self.board[index]
     
     def display(self):
         print(' 0 1 2 3 4 5 6 7')

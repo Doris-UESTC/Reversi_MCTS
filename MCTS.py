@@ -8,30 +8,18 @@ from Board import Board
 class RandomPlayer:
     def __init__(self,color):
         self.color=color
-    
-    def random_choice(self,board):
+        
+    def get_move(self,board):
         action_list=list(board.get_legal_actions(self.color))
         if len(action_list)==0:
             return None
         else:
             return random.choice(action_list)
-        
-    def get_move(self,board):
-        if self.color=='X':
-            player_name="player1"
-        else:
-            player_name="player2"
-        action=self.random_choice(board)
-        return action
 
 class HumanPlayer:
     def __init__(self,color):
         self.color=color
     def get_move(self,board,x,y):
-        if self.color=="X":
-            player="player1"
-        else:
-            player="player2"
         while True:
             action=[]
             m,n=x,y
@@ -160,10 +148,6 @@ class AIPlayer:
         return self.UCB1(root).action
 
     def get_move(self,board):
-        if self.color=='X':
-            player_name='player1'
-        else:
-            player_name='player2'
         action=None
         root_board=copy.deepcopy(board)
         root=Node(state=root_board,color=self.color)
@@ -197,11 +181,6 @@ class RoxannePlayer(object):
                         return move
 
     def get_move(self, board):
-
-        if self.color == 'X':
-            player_name = 'player1'
-        else:
-            player_name = 'player2'
         action = self.roxanne_select(board)
         return action
 
@@ -318,10 +297,6 @@ class ImprovedAIPlayer:
         return self.UCB1(root).action
 
     def get_move(self,board):
-        if self.color=='X':
-            player_name='player1'
-        else:
-            player_name='player2'
         action=None
         root_board=copy.deepcopy(board)
         root=Node(state=root_board,color=self.color)

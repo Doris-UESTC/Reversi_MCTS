@@ -30,17 +30,6 @@ class Game(object):
                     count2+=1
         print(count1)
         print(count2)
-    def force_loss(self,is_board=False,is_legal=False):
-        if self.current_player==self.player1:
-            win_color="O"
-            loss_color="X"
-            winner=2
-        else:
-            win_color="X"
-            loss_color="O"
-            winner=1
-        diff=0
-        return winner,diff
 
     def run(self):
         winner=None
