@@ -18,7 +18,6 @@ class Board(object):
         board=self.board
         for i in range(8):
             print(str(i)+' '.join(board[i]))
-
         print('\n')
 
     def count(self,color):
