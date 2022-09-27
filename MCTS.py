@@ -3,7 +3,7 @@ import math
 import random
 from secrets import choice
 from turtle import color
-
+import utils
 from Board import Board
 class RandomPlayer:
     def __init__(self,color):
@@ -108,6 +108,7 @@ class AIPlayer:
         return board.count('X'),board.count('O')
     
     def UCB1(self,node,uct_scalar=1.0):
+        uct_scalar=utils.uct_scalar
         max=-float('inf')
         max_set=[]
         for c in node.children:

@@ -1,3 +1,4 @@
+from ctypes import util
 from doctest import master
 import time
 from http.client import OK
@@ -16,6 +17,7 @@ import datetime
 from Board import Board
 from Game import Game
 from MCTS import AIPlayer,HumanPlayer,RoxannePlayer
+import utils
 
 class ReversiGUI(Frame):
     """黑白棋GUI"""
@@ -285,6 +287,7 @@ class ReversiGUI(Frame):
         if tempSuperParameter == self.superParameter:
             return
         self.superParameter = tempSuperParameter
+        utils.uct_scalar = tempSuperParameter
         messagebox.showinfo("超参设置", "超参数已修改为 " +
                             str(self.superParameter) + "！")
 
