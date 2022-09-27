@@ -188,8 +188,8 @@ class ReversiGUI(Frame):
                     boardCanvas.create_image((y*80+80,x*80+80),
                                              image=self.whiteImage)
                     boardCanvas.pack()
+        self.boardCanvas.update_idletasks()
     def AIGo(self,color):
-        time.sleep(10)
         if color=="X":
             action=self.player1.get_move(self.board)
             self.board.move(action,"X")
@@ -314,8 +314,21 @@ class ReversiGUI(Frame):
 
     def aiButtonClicked(self):
         """人机战按钮点击事件"""
-        self.playMode = PlayMode.AIVSAI
         messagebox.showinfo("AI对战", "当前模式为AI对战")
+        self.playMode = PlayMode.AIVSAI
+        self.player1=AIPlayer("X")
+        self.player2=AIPlayer("O")
+        self.current_player=self.player1
+        while not self.current_player.if_terminal(self.board):
+            action=self.current_player.get_move(self.board)
+            self.board.move(action,self.current_player.color)
+            self.blackCountLabel['text']=str(self.board.count("X"))
+            self.whiteCountLabel['text']=str(self.board.count("O"))
+            self.drawAll(board=self.board.board, boardCanvas=self.boardCanvas)
+            if self.current_player.color=="X":
+                self.current_player=self.player2
+            else:
+                self.current_player=self.player1
 
 
 class PlayMode(Enum):
